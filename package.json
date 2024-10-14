@@ -8,14 +8,17 @@
     "dev": "nodemon src/server.ts",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
+    "format:check": "prettier . --check",
+    "format:fix": "prettier . --fix",
     "dist": "npx tsc"
   },
   "keywords": [],
   "author": "Srinivas Reddy",
   "license": "ISC",
-  "lint-staged" : {
+  "lint-staged": {
     "*.ts": [
-      "npm run lint:fix"
+      "npm run lint:fix",
+      "npm run format:fix"
     ]
   },
   "description": "",
@@ -26,9 +29,11 @@
     "@types/eslint__js": "^8.42.3",
     "@types/node": "^22.7.5",
     "eslint": "^9.12.0",
+    "eslint-config-prettier": "^9.1.0",
     "husky": "^9.1.6",
     "lint-staged": "^15.2.10",
     "nodemon": "^3.1.7",
+    "prettier": "3.3.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.8.1"
