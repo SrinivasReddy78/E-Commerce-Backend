@@ -6,8 +6,8 @@
     "start": "node dist/server.js",
     "prepare": "husky",
     "dev": "nodemon src/server.ts",
-    "lint" : "eslint",
-    "lint:fix" : "eslint --fix",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
     "dist": "npx tsc"
   },
   "keywords": [],
