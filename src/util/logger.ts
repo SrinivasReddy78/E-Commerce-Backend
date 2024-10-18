@@ -5,24 +5,38 @@ import config from '../config/config'
 import { EApplicationEnvironment } from '../constant/application'
 import path from 'path'
 import * as sourceMapSupport from 'source-map-support'
+import { blue, red, yellow, green, magenta } from 'colorette'
 
-//Linking trace Support 
+//Linking trace Support
 sourceMapSupport.install()
+
+const colorizeLevel = (level: string) => {
+    switch (level) {
+        case 'ERROR':
+            return red(level)
+        case 'INFO':
+            return blue(level)
+        case 'WARN':
+            return yellow(level)
+        default:
+            return level
+    }
+}
 
 const consoleLogFormat = format.printf((info) => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { level, message, timestamp, meta = {} } = info
 
-    const customLevel = level.toUpperCase()
+    const customLevel = colorizeLevel(level.toUpperCase())
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const customMessage = message
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const customTimeStamp = timestamp
+    const customTimeStamp = green(timestamp as string)
     const customMeta = util.inspect(meta, {
         showHidden: false,
-        depth: null
+        depth: null,
+        colors: true
     })
-    const customLog = `${customLevel} [${customTimeStamp}] ${customMessage}\n${'META'} ${customMeta}\n`
+    const customLog = `${customLevel} [${customTimeStamp}] ${customMessage}\n${magenta('META')} ${customMeta}\n`
     return customLog
 })
 
@@ -45,8 +59,8 @@ const fileLogFormat = format.printf((info) => {
     const logMeta: Record<string, unknown> = {}
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    for(const [key, value] of Object.entries(meta)){
-        if(value instanceof Error) {
+    for (const [key, value] of Object.entries(meta)) {
+        if (value instanceof Error) {
             logMeta[key] = {
                 name: value.name,
                 message: value.message,
