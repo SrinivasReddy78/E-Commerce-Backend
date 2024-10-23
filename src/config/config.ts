@@ -9,5 +9,8 @@ export default {
     SERVER_URL: process.env.SERVER_URL,
 
     // Database
-    DATABASE_URL: process.env.DATABASE_URL
+    DATABASE_URL: process.env.DATABASE_URL,
+
+    // Frontend Url
+    FRONTEND_URL: process.env.FRONTEND_URL
 }
