@@ -12,5 +12,8 @@ export default {
     DATABASE_URL: process.env.DATABASE_URL,
 
     // Frontend Url
-    FRONTEND_URL: process.env.FRONTEND_URL
+    FRONTEND_URL: process.env.FRONTEND_URL,
+
+    //Email Service
+    EMAIL_SERVICE_API_KEY : process.env.EMAIL_SERVICE_API_KEY
 }

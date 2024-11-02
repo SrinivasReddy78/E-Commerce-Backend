@@ -7,8 +7,10 @@ import httpError from './util/httpError';
 import helmet from 'helmet';
 import cors from 'cors';
 import config from './config/config';
+import userRouter from './router/authRouter';
 
 const app: Application = express();
+const baseRouter = express.Router()
 
 // Middlewares
 app.use(helmet());
@@ -18,10 +20,12 @@ app.use(cors({
 }))
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../', 'public')));
+app.use('/api/v1', baseRouter)
 
 
 // routes
-app.use('/api/v1', router)
+baseRouter.use('/', router);
+baseRouter.use('/user', userRouter);
 
 // 404 Handler
 app.use((req: Request, _:Response, next: NextFunction)=>{
