@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from 'express'
 import httpResponse from '../util/httpResponse'
 import httpError from '../util/httpError'
-import { IRegisterUserRequestBody, Iuser } from '../types/userType'
-import { validateJoiSchema, validateRegisterBody } from '../service/validationService'
+import { ILoginUserRequestBody, IRefresh, IRegisterUserRequestBody, Iuser } from '../types/userType'
+import { validateJoiSchema, validateLoginBody, validateRegisterBody } from '../service/validationService'
 import quicker from '../util/quicker'
 import responseMessage from '../constant/responseMessage'
 import databaseService from '../service/databaseService'
@@ -12,6 +12,7 @@ import emailService from '../service/emailService'
 import logger from '../util/logger'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
+import { EApplicationEnvironment } from '../constant/application'
 
 dayjs.extend(utc)
 
@@ -25,6 +26,10 @@ interface IConfirmationBody extends Request {
     query: {
         code: string
     }
+}
+
+interface ILoginBody extends Request {
+    body: ILoginUserRequestBody
 }
 
 export default {
@@ -149,6 +154,76 @@ export default {
             httpResponse(req, res, 200, responseMessage.SUCCESS)
         } catch (error) {
             httpError(next, error, req, 500)
+        }
+    },
+
+    login: async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { body } = req as ILoginBody
+            // * Validate and parse Body
+            const { value, error } = validateJoiSchema<ILoginUserRequestBody>(validateLoginBody, body)
+            if (error) {
+                return httpError(next, error, req, 422)
+            }
+            const { email, password } = value
+
+            // * Find User
+            const user = await databaseService.findUserByEmail(email, '+password')
+            if (!user) {
+                return httpError(next, new Error(responseMessage.NOT_FOUND('user')), req, 404)
+            }
+
+            // * Validate Password
+            const isValidPassword = await quicker.comparePassword(password, user.password)
+            if (!isValidPassword) {
+                return httpError(next, new Error(responseMessage.INVALID_EMAIL_OR_PASSWORD), req, 400)
+            }
+
+            // * Generate Access Token & Refresh Token
+            const accessToken = quicker.generateToken({ userID: user._id }, config.ACCESS_TOKEN.SECRET as string, config.ACCESS_TOKEN.EXPIRY)
+            const refreshToken = quicker.generateToken({ userID: user._id }, config.REFRESH_TOKEN.SECRET as string, config.REFRESH_TOKEN.EXPIRY)
+            
+            // * Update Last lastLogin Information
+            user.lastLoginAt = dayjs().utc().toDate();
+            await user.save();
+
+            // * Refresh Token Store
+            const refreshTokenPayload: IRefresh = {
+                token: refreshToken
+            }
+
+            await databaseService.createRefreshToken(refreshTokenPayload)
+
+            // * Send Cookie
+            let DOMAIN = ''
+            try {
+                const url = new URL(config.SERVER_URL as string);
+                DOMAIN = url.hostname
+            } catch (error) {
+                throw error
+            }
+            res.cookie('accessToken', accessToken, {
+                httpOnly: true,
+                path: '/api/v1',
+                domain: DOMAIN,
+                maxAge: 1000 * config.ACCESS_TOKEN.EXPIRY,
+                sameSite: 'strict',
+                secure: !(config.ENV === EApplicationEnvironment.DEVELOPMENT)
+            }).cookie('refreshToken', refreshToken, {
+                httpOnly: true,
+                path: '/api/v1',
+                domain: DOMAIN,
+                maxAge: 1000 * config.REFRESH_TOKEN.EXPIRY,
+                sameSite: 'strict',
+                secure: !(config.ENV === EApplicationEnvironment.DEVELOPMENT)
+            })
+
+            httpResponse(req, res, 200, responseMessage.SUCCESS, {
+                accessToken,
+                refreshToken
+            })
+        } catch (err) {
+            httpError(next, err, req, 500)
         }
     }
 }

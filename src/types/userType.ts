@@ -27,10 +27,19 @@ export interface Iuser {
     consent: boolean
 }
 
+export interface IRefresh {
+    token: string
+}
+
 export interface IRegisterUserRequestBody {
     name: string
     email: string
     password: string
     phoneNumber: string
     consent: boolean
+}
+
+export interface ILoginUserRequestBody {
+    email: string
+    password: string
 }
