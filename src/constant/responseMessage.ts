@@ -5,5 +5,7 @@ export default {
     TOO_MANY_REQUESTS : `Too Many Requests. Try again after sometime`,
     INVALID_PHONE_NUMBER : `Invaild Phone Number`,
     ALREADY_EXIST: (entity: string, identifier: string) => `${entity} is already exist with ${identifier}`,
-    CREATED_SUCCESSFULLY: (entity: string) => `${entity} created successfully`
+    CREATED_SUCCESSFULLY: (entity: string) => `${entity} created successfully`,
+    INVALID_CONFIRMATION_TOKEN_OR_CODE : `Invalid Confirmation Token or Code`,
+    ACCOUNT_ALREADY_CONFIRMED: `Account already confirmed`
 }
