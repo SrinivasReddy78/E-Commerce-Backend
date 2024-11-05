@@ -8,12 +8,14 @@ import helmet from 'helmet';
 import cors from 'cors';
 import config from './config/config';
 import userRouter from './router/authRouter';
+import cookieParser from 'cookie-parser';
 
 const app: Application = express();
 const baseRouter = express.Router()
 
 // Middlewares
 app.use(helmet());
+app.use(cookieParser());
 app.use(cors({
     origin: [config.FRONTEND_URL as string],
     credentials: true,

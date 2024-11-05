@@ -8,5 +8,6 @@ export default {
     CREATED_SUCCESSFULLY: (entity: string) => `${entity} created successfully`,
     INVALID_CONFIRMATION_TOKEN_OR_CODE : `Invalid Confirmation Token or Code`,
     ACCOUNT_ALREADY_CONFIRMED: `Account already confirmed`,
-    INVALID_EMAIL_OR_PASSWORD: `Invalid Email or Password`
+    INVALID_EMAIL_OR_PASSWORD: `Invalid Email or Password`,
+    UNAUTHORISED: `You are UnAuthorised to Perform this action`
 }

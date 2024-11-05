@@ -32,6 +32,10 @@ interface ILoginBody extends Request {
     body: ILoginUserRequestBody
 }
 
+interface ISelfIdentificationRequest extends Request {
+    authenticatedUser: Iuser
+}
+
 export default {
     register: async (req: Request, res: Response, next: NextFunction) => {
         try {
@@ -182,10 +186,10 @@ export default {
             // * Generate Access Token & Refresh Token
             const accessToken = quicker.generateToken({ userID: user._id }, config.ACCESS_TOKEN.SECRET as string, config.ACCESS_TOKEN.EXPIRY)
             const refreshToken = quicker.generateToken({ userID: user._id }, config.REFRESH_TOKEN.SECRET as string, config.REFRESH_TOKEN.EXPIRY)
-            
+
             // * Update Last lastLogin Information
-            user.lastLoginAt = dayjs().utc().toDate();
-            await user.save();
+            user.lastLoginAt = dayjs().utc().toDate()
+            await user.save()
 
             // * Refresh Token Store
             const refreshTokenPayload: IRefresh = {
@@ -197,7 +201,7 @@ export default {
             // * Send Cookie
             let DOMAIN = ''
             try {
-                const url = new URL(config.SERVER_URL as string);
+                const url = new URL(config.SERVER_URL as string)
                 DOMAIN = url.hostname
             } catch (error) {
                 throw error
@@ -222,6 +226,15 @@ export default {
                 accessToken,
                 refreshToken
             })
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    },
+
+    selfIdentification: (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { authenticatedUser } = req as ISelfIdentificationRequest
+            httpResponse(req, res, 200, responseMessage.SUCCESS, authenticatedUser)
         } catch (err) {
             httpError(next, err, req, 500)
         }
