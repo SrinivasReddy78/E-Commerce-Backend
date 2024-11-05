@@ -24,12 +24,15 @@ export default {
         return userModel.create(payload)
     },
     findUserByConfirmationTokenAndCode: (token: string, code: string) => {
-        return userModel.findOne({ 
-            'accountConfirmation.token' : token,
-            'accountConfirmation.code' : code
-         })
+        return userModel.findOne({
+            'accountConfirmation.token': token,
+            'accountConfirmation.code': code
+        })
     },
     createRefreshToken: (payload: IRefresh) => {
         return refreshTokenModel.create(payload)
+    },
+    deleteRefreshToken: (token: string) => {
+        return refreshTokenModel.deleteOne({ token: token })
     }
 }

@@ -8,5 +8,6 @@ userRouter.route('/register').post(authController.register)
 userRouter.route('/confirmation/:token').put(authController.confirmation)
 userRouter.route('/login').post(authController.login)
 userRouter.route('/self-identification').get(isAuthenticated, authController.selfIdentification)
+userRouter.route('/logout').put(isAuthenticated, authController.logout)
 
 export default userRouter
