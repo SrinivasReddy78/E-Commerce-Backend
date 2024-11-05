@@ -1,3 +1,4 @@
+import { JwtPayload } from 'jsonwebtoken'
 import { EUserRole } from '../constant/userConstants'
 
 export interface Iuser {
@@ -42,4 +43,8 @@ export interface IRegisterUserRequestBody {
 export interface ILoginUserRequestBody {
     email: string
     password: string
+}
+
+export interface IDecryptedJwt extends JwtPayload {
+    userID: string
 }

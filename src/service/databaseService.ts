@@ -34,5 +34,8 @@ export default {
     },
     deleteRefreshToken: (token: string) => {
         return refreshTokenModel.deleteOne({ token: token })
+    },
+    findRefreshToken: (token: string) => {
+        return refreshTokenModel.findOne({ token })
     }
 }

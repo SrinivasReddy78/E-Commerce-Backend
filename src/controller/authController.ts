@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express'
 import httpResponse from '../util/httpResponse'
 import httpError from '../util/httpError'
-import { ILoginUserRequestBody, IRefresh, IRegisterUserRequestBody, Iuser } from '../types/userType'
+import { IDecryptedJwt, ILoginUserRequestBody, IRefresh, IRegisterUserRequestBody, Iuser } from '../types/userType'
 import { validateJoiSchema, validateLoginBody, validateRegisterBody } from '../service/validationService'
 import quicker from '../util/quicker'
 import responseMessage from '../constant/responseMessage'
@@ -240,7 +240,7 @@ export default {
             const { refreshToken } = cookies as {
                 refreshToken: string | undefined
             }
-            if(refreshToken) {
+            if (refreshToken) {
                 await databaseService.deleteRefreshToken(refreshToken)
             }
             const DOMAIN = quicker.getDomainFromUrl(config.SERVER_URL as string)
@@ -265,5 +265,64 @@ export default {
         } catch (err) {
             httpError(next, err, req, 500)
         }
+    },
+
+    refreshToken: async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { cookies } = req
+            const { refreshToken, accessToken } = cookies as {
+                refreshToken: string | undefined
+                accessToken: string | undefined
+            }
+            if (accessToken) {
+                return httpResponse(req, res, 200, responseMessage.SUCCESS, {
+                    accessToken
+                })
+            }
+            if (refreshToken) {
+                const rft = await databaseService.findRefreshToken(refreshToken)
+                if (rft) {
+                    const DOMAIN = quicker.getDomainFromUrl(config.SERVER_URL as string)
+
+                    let userID: null | string = null
+
+                    try {
+                        const decryptedJwt = quicker.verifyToken(refreshToken, config.REFRESH_TOKEN.SECRET as string) as IDecryptedJwt
+                        userID = decryptedJwt.userID
+
+                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                    } catch (error) {
+                        userID = null
+                    }
+
+                    if (userID) {
+                        const accessToken = quicker.generateToken(
+                            { userId: userID },
+                            config.ACCESS_TOKEN.SECRET as string,
+                            config.ACCESS_TOKEN.EXPIRY
+                        )
+
+                        res.cookie('accessToken', accessToken, {
+                            httpOnly: true,
+                            path: '/api/v1',
+                            domain: DOMAIN,
+                            maxAge: 1000 * config.ACCESS_TOKEN.EXPIRY,
+                            sameSite: 'strict',
+                            secure: !(config.ENV === EApplicationEnvironment.DEVELOPMENT)
+                        })
+
+                        return httpResponse(req, res, 200, responseMessage.SUCCESS, {
+                            accessToken
+                        })
+                    }
+                }
+            }
+            httpError(next, new Error(responseMessage.UNAUTHORISED), req, 401)
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
     }
+
+
+    
 }
