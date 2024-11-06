@@ -12,5 +12,6 @@ userRouter.route('/logout').put(isAuthenticated, authController.logout)
 userRouter.route('/refresh-token').post(authController.refreshToken)
 userRouter.route('/forgot-password').put(authController.forgotPassword)
 userRouter.route('/reset-password/:token').put(authController.resetPassword)
+userRouter.route('/change-password').put(isAuthenticated, authController.changePassword)
 
 export default userRouter

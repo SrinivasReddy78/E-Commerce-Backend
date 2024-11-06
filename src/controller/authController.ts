@@ -2,15 +2,18 @@ import { NextFunction, Request, Response } from 'express'
 import httpResponse from '../util/httpResponse'
 import httpError from '../util/httpError'
 import {
+    IChangePasswordRequestBody,
     IDecryptedJwt,
     IForgotPasswordRequestBody,
     ILoginUserRequestBody,
     IRefresh,
     IRegisterUserRequestBody,
     IResetPasswordRequestBody,
-    Iuser
+    Iuser,
+    IuserWithID
 } from '../types/userType'
 import {
+    validateChangePasswordBody,
     validateForgotPasswordBody,
     validateJoiSchema,
     validateLoginBody,
@@ -59,6 +62,11 @@ interface IResetPasswordBody extends Request {
         token: string
     }
     body: IResetPasswordRequestBody
+}
+
+interface IChangePasswordRequest extends Request {
+    authenticatedUser: IuserWithID
+    body: IChangePasswordRequestBody
 }
 
 export default {
@@ -416,6 +424,7 @@ export default {
             if (!user) {
                 return httpError(next, new Error(responseMessage.NOT_FOUND('user')), req, 404)
             }
+            
             // * check if user account is confirmed
             if (!user.accountConfirmation.status) {
                 return httpError(next, new Error(responseMessage.ACCOUNT_CONFIRMATION_REQUIRED), req, 400)
@@ -444,6 +453,57 @@ export default {
             const to = [user.email]
             const subject = 'Your LSHOP Password Has Been Reset Successfully'
             const message = ` Hi ${user.name},\n\n Your password has been successfully reset. You can now log in to your LSHOP account using your new password.\n\n If you didn’t make this change or need further help, please contact us immediately at [support@lshop.com].\n\n Best regards,\n The LSHOP Team `
+
+            emailService.sendEmail(to, subject, message).catch((err) => {
+                logger.error('EMAIL_SERVICE', {
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                    meta: err
+                })
+            })
+
+            httpResponse(req, res, 200, responseMessage.SUCCESS)
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    },
+    changePassword: async (req: Request, res: Response, next: NextFunction) => {
+        try {
+
+            // * Body parsing & Validation
+            const {body, authenticatedUser} = req as IChangePasswordRequest
+
+            const { value, error } = validateJoiSchema<IChangePasswordRequestBody>(validateChangePasswordBody, body)
+            if (error) {
+                return httpError(next, error, req, 422)
+            }
+            const { oldPassword, newPassword } = value
+
+            // * Find user by Id
+            const user = await databaseService.findUserById(authenticatedUser._id, '+password')
+            if(!user) {
+                return httpError(next, new Error(responseMessage.NOT_FOUND('user')), req, 404)
+            }
+
+            // * check if old password is matching with stored password
+            const isMatchingPass = await quicker.comparePassword(oldPassword, user.password)
+            if(!isMatchingPass) {
+                return httpError(next, new Error(responseMessage.INVALID_OLD_PASSWORD), req, 400)
+            }
+            if(oldPassword === newPassword) {
+                return httpError(next, new Error(responseMessage.NEW_PASSWORD_MATCHING_OLD_PASSWORD), req, 400)
+            }
+
+            // * Hashing the new Password
+            const hashedPassword = await quicker.hashPassword(newPassword)
+
+            // * Update user 
+            user.password = hashedPassword
+            await user.save()
+
+            // * Send Email
+            const to = [user.email]
+            const subject = 'Your LSHOP Password Has Been Changed Successfully'
+            const message = ` Hi ${user.name},\n\n Your password has been successfully changed. If you didn’t make this change or have any questions, please contact us immediately at [support@lshop.com].\n\n Best regards,\n The LSHOP Team `
 
             emailService.sendEmail(to, subject, message).catch((err) => {
                 logger.error('EMAIL_SERVICE', {
