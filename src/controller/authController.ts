@@ -1,8 +1,22 @@
 import { NextFunction, Request, Response } from 'express'
 import httpResponse from '../util/httpResponse'
 import httpError from '../util/httpError'
-import { IDecryptedJwt, IForgotPasswordRequestBody, ILoginUserRequestBody, IRefresh, IRegisterUserRequestBody, Iuser } from '../types/userType'
-import { validateForgotPasswordBody, validateJoiSchema, validateLoginBody, validateRegisterBody } from '../service/validationService'
+import {
+    IDecryptedJwt,
+    IForgotPasswordRequestBody,
+    ILoginUserRequestBody,
+    IRefresh,
+    IRegisterUserRequestBody,
+    IResetPasswordRequestBody,
+    Iuser
+} from '../types/userType'
+import {
+    validateForgotPasswordBody,
+    validateJoiSchema,
+    validateLoginBody,
+    validateRegisterBody,
+    validateResetPasswordBody
+} from '../service/validationService'
 import quicker from '../util/quicker'
 import responseMessage from '../constant/responseMessage'
 import databaseService from '../service/databaseService'
@@ -38,6 +52,13 @@ interface ISelfIdentificationRequest extends Request {
 
 interface IForgotPasswordBody extends Request {
     body: IForgotPasswordRequestBody
+}
+
+interface IResetPasswordBody extends Request {
+    params: {
+        token: string
+    }
+    body: IResetPasswordRequestBody
 }
 
 export default {
@@ -331,14 +352,67 @@ export default {
         try {
             // * Parsing the Body
             const { body } = req as IForgotPasswordBody
+
             // * validate the Body
             const { value, error } = validateJoiSchema<IForgotPasswordRequestBody>(validateForgotPasswordBody, body)
             if (error) {
                 return httpError(next, error, req, 422)
             }
             const { email } = value
+
             // * find user by Email
             const user = await databaseService.findUserByEmail(email)
+            if (!user) {
+                return httpError(next, new Error(responseMessage.NOT_FOUND('user')), req, 404)
+            }
+
+            // * check if user account is confirmed
+            if (!user.accountConfirmation.status) {
+                return httpError(next, new Error(responseMessage.ACCOUNT_CONFIRMATION_REQUIRED), req, 400)
+            }
+
+            // * password reset token & expiry
+            const passwordResetToken = quicker.generateRandomId()
+            const passwordResetExpiry = quicker.generateResetPasswordExpiry(15)
+
+            // * Update user
+            user.passwordReset.token = passwordResetToken
+            user.passwordReset.expiry = passwordResetExpiry
+            await user.save()
+
+            // * send Email
+            const passResetUrl = `${config.FRONTEND_URL}/reset-password/${passwordResetToken}`
+            const to = [email]
+            const subject = 'LSHOP Password Reset Request'
+            const message = ` Hi ${user.name},\n We received a request to reset your password for your LSHOP account. To proceed, please click the link below:\n ${passResetUrl} \n For security reasons, this link will expire in 15 minutes. If you did not request a password reset, please ignore this email.\n If you need further assistance, feel free to reach out at [support@lshop.com].\n Best regards,\n The LSHOP Team `
+
+            emailService.sendEmail(to, subject, message).catch((err) => {
+                logger.error('EMAIL_SERVICE', {
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                    meta: err
+                })
+            })
+
+            httpResponse(req, res, 200, responseMessage.SUCCESS)
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    },
+    resetPassword: async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            // * Body parsing &  Validation
+
+            const { body, params } = req as IResetPasswordBody
+            const { token } = params
+
+            const { value, error } = validateJoiSchema<IResetPasswordRequestBody>(validateResetPasswordBody, body)
+            if (error) {
+                return httpError(next, error, req, 422)
+            }
+            const { newPassword } = value
+
+            // * Find user by Token
+            const user = await databaseService.findUserByResetToken(token)
             if (!user) {
                 return httpError(next, new Error(responseMessage.NOT_FOUND('user')), req, 404)
             }
@@ -346,18 +420,30 @@ export default {
             if (!user.accountConfirmation.status) {
                 return httpError(next, new Error(responseMessage.ACCOUNT_CONFIRMATION_REQUIRED), req, 400)
             }
-            // * password reset token & expiry
-            const passwordResetToken = quicker.generateRandomId()
-            const passwordResetExpiry = quicker.generateResetPasswordExpiry(15)
-            // * Update user
-            user.passwordReset.token = passwordResetToken
-            user.passwordReset.expiry = passwordResetExpiry
+
+            // * check expiry of the url
+            const storedExpiry = user.passwordReset.expiry
+            const currentTimeStamp = dayjs().valueOf()
+            if (!storedExpiry) {
+                return httpError(next, new Error(responseMessage.INVALID_REQUEST), req, 400)
+            }
+            if (currentTimeStamp > storedExpiry) {
+                httpError(next, new Error(responseMessage.URL_EXPIRED), req, 400)
+            }
+            // * hash new password
+            const hashedPassword = await quicker.hashPassword(newPassword)
+
+            // * Update the user with new password
+            user.password = hashedPassword
+            user.passwordReset.token = null
+            user.passwordReset.expiry = null
+            user.passwordReset.lastResetAt = dayjs().utc().toDate()
             await user.save()
+
             // * send Email
-            const passResetUrl = `${config.FRONTEND_URL}/confirmation/${passwordResetToken}`
-            const to = [email]
-            const subject = 'LSHOP Password Reset Request'
-            const message = ` Hi ${user.name},\n We received a request to reset your password for your LSHOP account. To proceed, please click the link below:\n ${passResetUrl} \n For security reasons, this link will expire in 15 minutes. If you did not request a password reset, please ignore this email.\n If you need further assistance, feel free to reach out at [support@lshop.com].\n Best regards,\n The LSHOP Team `
+            const to = [user.email]
+            const subject = 'Your LSHOP Password Has Been Reset Successfully'
+            const message = ` Hi ${user.name},\n\n Your password has been successfully reset. You can now log in to your LSHOP account using your new password.\n\n If you didn’t make this change or need further help, please contact us immediately at [support@lshop.com].\n\n Best regards,\n The LSHOP Team `
 
             emailService.sendEmail(to, subject, message).catch((err) => {
                 logger.error('EMAIL_SERVICE', {

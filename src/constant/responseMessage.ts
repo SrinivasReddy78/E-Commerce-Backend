@@ -10,5 +10,7 @@ export default {
     ACCOUNT_ALREADY_CONFIRMED: `Account already confirmed`,
     INVALID_EMAIL_OR_PASSWORD: `Invalid Email or Password`,
     UNAUTHORISED: `You are UnAuthorised to Perform this action`,
-    ACCOUNT_CONFIRMATION_REQUIRED: `Account Confirmation Required`
+    ACCOUNT_CONFIRMATION_REQUIRED: `Account Confirmation Required`,
+    URL_EXPIRED: `Password Reset url is Expired`,
+    INVALID_REQUEST: `Invalid Request`
 }
