@@ -9,5 +9,6 @@ export default {
     INVALID_CONFIRMATION_TOKEN_OR_CODE : `Invalid Confirmation Token or Code`,
     ACCOUNT_ALREADY_CONFIRMED: `Account already confirmed`,
     INVALID_EMAIL_OR_PASSWORD: `Invalid Email or Password`,
-    UNAUTHORISED: `You are UnAuthorised to Perform this action`
+    UNAUTHORISED: `You are UnAuthorised to Perform this action`,
+    ACCOUNT_CONFIRMATION_REQUIRED: `Account Confirmation Required`
 }

@@ -10,5 +10,6 @@ userRouter.route('/login').post(authController.login)
 userRouter.route('/self-identification').get(isAuthenticated, authController.selfIdentification)
 userRouter.route('/logout').put(isAuthenticated, authController.logout)
 userRouter.route('/refresh-token').post(authController.refreshToken)
+userRouter.route('/forgot-password').put(authController.forgotPassword)
 
 export default userRouter
