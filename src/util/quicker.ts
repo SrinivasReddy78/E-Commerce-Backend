@@ -91,5 +91,8 @@ export default {
     },
     generateResetPasswordExpiry: (minutes: number) => {
         return dayjs().valueOf() + minutes * 60 * 1000
+    },
+    paginate: () => {
+        
     }
 }

@@ -9,6 +9,8 @@ import cors from 'cors';
 import config from './config/config';
 import userRouter from './router/authRouter';
 import cookieParser from 'cookie-parser';
+import adminRouter from './router/adminRouter';
+import isAuthenticated from './middleware/isAuthenticated';
 
 const app: Application = express();
 const baseRouter = express.Router()
@@ -28,6 +30,7 @@ app.use('/api/v1', baseRouter)
 // routes
 baseRouter.use('/', router);
 baseRouter.use('/user', userRouter);
+baseRouter.use('/admin',isAuthenticated, adminRouter)
 
 // 404 Handler
 app.use((req: Request, _:Response, next: NextFunction)=>{

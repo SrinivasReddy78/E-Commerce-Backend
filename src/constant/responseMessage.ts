@@ -14,5 +14,6 @@ export default {
     URL_EXPIRED: `Password Reset url is Expired`,
     INVALID_REQUEST: `Invalid Request`,
     INVALID_OLD_PASSWORD: `Invalid old Password`,
-    NEW_PASSWORD_MATCHING_OLD_PASSWORD: `New Password is matching with Old Password`
+    NEW_PASSWORD_MATCHING_OLD_PASSWORD: `New Password is matching with Old Password`,
+    INVALID: (entity: string) => `Invalid ${entity}`,
 }

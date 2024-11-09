@@ -1,8 +1,8 @@
 import mongoose from 'mongoose'
-import { Iuser } from '../types/userType'
+import { IuserWithDocument } from '../types/userType'
 import { EUserRole } from '../constant/userConstants'
 
-const userSchema = new mongoose.Schema<Iuser>(
+const userSchema = new mongoose.Schema<IuserWithDocument>(
     {
         name: {
             type: String,
@@ -97,4 +97,4 @@ const userSchema = new mongoose.Schema<Iuser>(
     { timestamps: true }
 )
 
-export default mongoose.model<Iuser>('user', userSchema)
+export default mongoose.model<IuserWithDocument>('user', userSchema)

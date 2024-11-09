@@ -1,5 +1,6 @@
 import { JwtPayload } from 'jsonwebtoken'
 import { EUserRole } from '../constant/userConstants'
+import { Document } from 'mongoose'
 
 export interface Iuser {
     name: string
@@ -26,6 +27,9 @@ export interface Iuser {
     }
     lastLoginAt: Date | null
     consent: boolean
+}
+
+export interface IuserWithDocument extends Iuser, Document {
 }
 
 export interface IuserWithID extends Iuser {
@@ -65,4 +69,13 @@ export interface IChangePasswordRequestBody {
     oldPassword: string
     newPassword: string
     confirmNewPassword: string
+}
+
+export interface PaginationResult<T> {
+    data: T[]
+    pagination: {
+        page: number
+        totalData: number
+        totalPages: number
+    }
 }
