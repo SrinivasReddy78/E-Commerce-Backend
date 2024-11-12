@@ -6,6 +6,7 @@ export default {
     INVALID_PHONE_NUMBER : `Invaild Phone Number`,
     ALREADY_EXIST: (entity: string, identifier: string) => `${entity} is already exist with ${identifier}`,
     CREATED_SUCCESSFULLY: (entity: string) => `${entity} created successfully`,
+    UPDATED_SUCCESSFULLY: (entity: string) => `${entity} updated successfully`,
     INVALID_CONFIRMATION_TOKEN_OR_CODE : `Invalid Confirmation Token or Code`,
     ACCOUNT_ALREADY_CONFIRMED: `Account already confirmed`,
     INVALID_EMAIL_OR_PASSWORD: `Invalid Email or Password`,
@@ -16,4 +17,6 @@ export default {
     INVALID_OLD_PASSWORD: `Invalid old Password`,
     NEW_PASSWORD_MATCHING_OLD_PASSWORD: `New Password is matching with Old Password`,
     INVALID: (entity: string) => `Invalid ${entity}`,
+    SAME_REQUEST_ROLE: (entity: string) => `You are already an ${entity}`,
+    ACTION_CANT_BE_DONE: `The Requested action can't be done`
 }

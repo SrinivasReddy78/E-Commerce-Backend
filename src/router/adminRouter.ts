@@ -6,6 +6,7 @@ const adminRouter = Router()
 
 // Super Admin Routes (Exclusive to Super Admin)
 adminRouter.route('/admins').get(isSuperAdmin, adminController.getAllAdmins)
+adminRouter.route('/users/:userId/change-role').put(isSuperAdmin, adminController.ChangeToNewRole);
 
 
 
@@ -21,9 +22,8 @@ adminRouter.route('/admins').get(isSuperAdmin, adminController.getAllAdmins)
 
 // // Super Admin Routes (Exclusive to Super Admin)
 // adminRouter.route('/admins').get(isAuthenticated, isSuperAdmin, adminController.getAllAdmins);
-// adminRouter.route('/admins').post(isAuthenticated, isSuperAdmin, adminController.createAdmin);
-// adminRouter.route('/admins/:id').delete(isAuthenticated, isSuperAdmin, adminController.deleteAdmin);
 // adminRouter.route('/admins/:id/promote').put(isAuthenticated, isSuperAdmin, adminController.promoteToSuperAdmin);
+// adminRouter.route('/admins/:id').delete(isAuthenticated, isSuperAdmin, adminController.deleteAdmin);
 
 
 export default adminRouter
