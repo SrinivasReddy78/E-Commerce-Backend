@@ -3,6 +3,7 @@ import config from '../config/config'
 import userModel from '../model/userModel'
 import { IRefresh, Iuser, PaginationResult } from '../types/userType'
 import refreshTokenModel from '../model/refreshTokenModel'
+import { isValidObjectId } from 'mongoose';
 
 export default {
     connect: async () => {
@@ -19,6 +20,9 @@ export default {
     },
     findUserById: (id: string, select: string = '') => {
         return userModel.findById(id).select(select)
+    },
+    isValidAdminId: (id: string): boolean => {
+        return isValidObjectId(id);
     },
     registerUser: (payload: Iuser) => {
         return userModel.create(payload)

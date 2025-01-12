@@ -7,6 +7,7 @@ export default {
     ALREADY_EXIST: (entity: string, identifier: string) => `${entity} is already exist with ${identifier}`,
     CREATED_SUCCESSFULLY: (entity: string) => `${entity} created successfully`,
     UPDATED_SUCCESSFULLY: (entity: string) => `${entity} updated successfully`,
+    DELETED_SUCCESSFULLY: (entity: string) => `${entity} deleted successfully`,
     INVALID_CONFIRMATION_TOKEN_OR_CODE : `Invalid Confirmation Token or Code`,
     ACCOUNT_ALREADY_CONFIRMED: `Account already confirmed`,
     INVALID_EMAIL_OR_PASSWORD: `Invalid Email or Password`,
